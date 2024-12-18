@@ -1,0 +1,4 @@
+name: ImageOnMap
+version: '1.0'
+main: org.z4te.imageOnMap.Main
+api-version: '1.21'
