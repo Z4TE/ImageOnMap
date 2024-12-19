@@ -13,11 +13,17 @@ import java.io.IOException;
 import java.net.URL;
 
 public class Renderer extends MapRenderer {
+
+    private final String ImageURL;
+    public Renderer(String url) {
+        this.ImageURL = url;
+    }
+
     @Override
     public void render(@NotNull MapView map, MapCanvas canvas, @NotNull Player player) {
 
         try {
-            URL url = new URL("https://cdn.discordapp.com/attachments/617581019238891520/1313117974260875274/ERxLJlJVUAAwelq.png?ex=67636729&is=676215a9&hm=dda7876594845e9cfecbe74fa7d39e40664eb29429c5fa7afc46cb3b3968c718&");
+            URL url = new URL(this.ImageURL);
             BufferedImage image = ImageIO.read(url);
             canvas.drawImage(0,0, MapPalette.resizeImage(image));
         } catch(IOException e) {
