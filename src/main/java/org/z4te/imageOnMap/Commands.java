@@ -12,10 +12,7 @@ import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.MapView;
 import org.jetbrains.annotations.NotNull;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.nio.Buffer;
 
 public class Commands implements CommandExecutor {
     @Override
@@ -27,23 +24,45 @@ public class Commands implements CommandExecutor {
         }
 
         if (args.length >= 1) {
-            String imageURL = args[0];
+            String imageURL = args[2];
 
-            ItemStack mapItem = new ItemStack(Material.FILLED_MAP, 1);
-            MapMeta mapMeta = (MapMeta) mapItem.getItemMeta();
+            try {
+                int cols = Integer.parseInt(args[0]);
+                int rows = Integer.parseInt(args[1]);
 
-            MapView mapView = Bukkit.createMap(player.getWorld());
+                BufferedImage scaledImage =  ImageFormatter.formatImage(imageURL, rows, cols);
 
-            Renderer mapRenderer = new Renderer(imageURL);
+                assert scaledImage != null;
+                int chunkWidth = scaledImage.getWidth() / cols;
+                int chunkHeight = scaledImage.getHeight() / rows;
 
-            mapView.addRenderer(mapRenderer);
-            mapView.getRenderers().clear();
+                for (int y = 0; y < rows; y++) {
+                    for (int x = 0; x < cols; x++) {
+                        ItemStack mapItem = new ItemStack(Material.FILLED_MAP, 1);
+                        MapMeta mapMeta = (MapMeta) mapItem.getItemMeta();
+                        MapView mapView = Bukkit.createMap(player.getWorld());
 
-            assert mapMeta != null;
-            mapMeta.setMapView(mapView);
-            mapItem.setItemMeta(mapMeta);
+                        BufferedImage subImage = scaledImage.getSubimage(x * chunkWidth, y * chunkHeight, chunkWidth, chunkHeight);
 
-            player.getInventory().addItem(mapItem);
+                        Renderer mapRenderer = new Renderer(subImage);
+
+                        mapView.addRenderer(mapRenderer);
+                        mapView.getRenderers().clear();
+
+                        String name = String.format("(%d, %d)", x, y);
+
+                        assert mapMeta != null;
+                        mapMeta.setMapView(mapView);
+                        mapMeta.setItemName(name);
+                        mapItem.setItemMeta(mapMeta);
+
+                        player.getInventory().addItem(mapItem);
+                    }
+                }
+            } catch (NumberFormatException e) {
+                sender.sendMessage( ChatColor.RED + "Invalid URL");
+                e.printStackTrace();
+            }
 
             return true;
         } else {
